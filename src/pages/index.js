@@ -39,7 +39,8 @@ export default function Home() {
       return;
     }
 
-    const msgs = [...chat, userMsg].map(m => ({ role: m.role, content: m.content }));
+    const updatedChat = [...chat, { from: 'user', role: 'user', content: input }];
+const msgs = updatedChat.map(m => ({ role: m.role, content: m.content }));
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
