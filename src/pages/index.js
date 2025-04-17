@@ -28,6 +28,7 @@ export default function Home() {
     if (!input || showWarningModal || showQuizModal) return;
     const userMsg = { from: 'user', role: 'user', content: input };
     setChat(prev => [...prev, userMsg]);
+
     setInput('');
     setLoading(true);
     const newCount = count + 1;
@@ -39,7 +40,6 @@ export default function Home() {
       return;
     }
 
-    const updatedChat = [...chat, { from: 'user', role: 'user', content: input }];
 const msgs = updatedChat.map(m => ({ role: m.role, content: m.content }));
     try {
       const res = await fetch('/api/chat', {
