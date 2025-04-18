@@ -26,26 +26,22 @@ export default function Home() {
 
   const sendMessage = async () => {
     if (!input || showWarningModal || showQuizModal) return;
+
     const userMsg = { from: 'user', role: 'user', content: input };
     setChat(prev => [...prev, userMsg]);
-
     setInput('');
     setLoading(true);
+
     const newCount = count + 1;
     setCount(newCount);
-
     if (newCount === warningThreshold) {
       setShowWarningModal(true);
       setLoading(false);
       return;
     }
 
-    const msgs = [...chat, userMsg].map(m => ({
-      role: m.role,
-      content: m.content,
-    }));
+    const msgs = [...chat, userMsg].map(m => ({ role: m.role, content: m.content }));
 
-const msgs = .map(m => ({ role: m.role, content: m.content }));
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
@@ -53,7 +49,10 @@ const msgs = .map(m => ({ role: m.role, content: m.content }));
         body: JSON.stringify({ messages: msgs }),
       });
       const data = await res.json();
-      setChat(prev => [...prev, { from: 'bot', role: 'assistant', content: data.reply.content }]);
+      setChat(prev => [
+        ...prev,
+        { from: 'bot', role: 'assistant', content: data.reply.content },
+      ]);
     } catch (err) {
       console.error(err);
     } finally {
@@ -61,13 +60,12 @@ const msgs = .map(m => ({ role: m.role, content: m.content }));
     }
   };
 
-  const handleQuizAnswer = (answer) => {
+  const handleQuizAnswer = answer => {
     if (answer === 'O') {
       window.alert('정답! 온라인그루밍은 나쁩니다!');
     } else {
       window.alert('틀렸습니다! 온라인그루밍은 나쁩니다!');
     }
-    // 정답 확인 후 새 창 열기
     window.open('https://cybershield2023.wixsite.com/my-site', '_blank');
     setShowQuizModal(false);
   };
@@ -94,11 +92,17 @@ const msgs = .map(m => ({ role: m.role, content: m.content }));
           borderRadius: '8px',
           backgroundColor: '#F8EBE7',
           padding: '15px',
-          boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+          boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
         }}
       >
         {chat.map((m, i) => (
-          <div key={i} style={{ textAlign: m.from === 'user' ? 'right' : 'left', margin: '8px 0' }}>
+          <div
+            key={i}
+            style={{
+              textAlign: m.from === 'user' ? 'right' : 'left',
+              margin: '8px 0',
+            }}
+          >
             <span
               style={{
                 display: 'inline-block',
@@ -152,7 +156,6 @@ const msgs = .map(m => ({ role: m.role, content: m.content }));
         </button>
       </div>
 
-      {/* 프릭션 모달 */}
       {showWarningModal && (
         <div
           style={{
@@ -204,16 +207,14 @@ const msgs = .map(m => ({ role: m.role, content: m.content }));
                 color: '#B02331',
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                display: 'inline-block',
               }}
-            >
+              >
               📝 퀴즈 풀기
             </div>
           </div>
         </div>
       )}
 
-      {/* 퀴즈 모달 */}
       {showQuizModal && (
         <div
           style={{
@@ -280,5 +281,6 @@ const msgs = .map(m => ({ role: m.role, content: m.content }));
         </div>
       )}
     </div>
-  );
+// return의 최상단 div
+);
 }
