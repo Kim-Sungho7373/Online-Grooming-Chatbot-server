@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { FiSend } from 'react-icons/fi';
 
 export default function Home() {
   const [input, setInput] = useState('');
@@ -7,17 +8,23 @@ export default function Home() {
   const [count, setCount] = useState(0);
   const [showWarningModal, setShowWarningModal] = useState(false);
   const [showQuizModal, setShowQuizModal] = useState(false);
+  const [quizIndex, setQuizIndex] = useState(0);
+  const [isComposing, setIsComposing] = useState(false);
   const warningThreshold = 5;
   const containerRef = useRef(null);
 
-  // 초기 메시지 삽입
+  const quizQuestions = [
+    { text: '그루밍 범죄자들은 피해자에게 대화를 ‘비밀’로 해달라고 요구한다.', answer: 'O' },
+    { text: '온라인에서 선물이나 돈을 받는 것은 그루밍의 징후이다.', answer: 'O' },
+    { text: '누군가 캐스팅 매니저라고 사진을 요청하면 보내도 좋다.', answer: 'X' },
+    { text: '온라인 그루밍은 SNS에서만 일어난다.', answer: 'X' },
+    { text: 'SNS에서 개인정보 보호 설정을 사용하면 그루밍범죄자로부터 보호할 수 있다.', answer: 'O' }
+  ];
+
   useEffect(() => {
-    setChat([
-      { from: 'bot', role: 'assistant', content: '상대와 대화를 나눠보세요.' },
-    ]);
+    setChat([{ from: 'bot', role: 'assistant', content: '안녕!' }]);
   }, []);
 
-  // 스크롤 자동 이동
   useEffect(() => {
     if (containerRef.current) {
       containerRef.current.scrollTop = containerRef.current.scrollHeight;
@@ -26,261 +33,178 @@ export default function Home() {
 
   const sendMessage = async () => {
     if (!input || showWarningModal || showQuizModal) return;
-
     const userMsg = { from: 'user', role: 'user', content: input };
     setChat(prev => [...prev, userMsg]);
     setInput('');
     setLoading(true);
+    const nextCount = count + 1;
+    setCount(nextCount);
 
-    const newCount = count + 1;
-    setCount(newCount);
-    if (newCount === warningThreshold) {
-      setShowWarningModal(true);
-      setLoading(false);
-      return;
-    }
-
-    const msgs = [...chat, userMsg].map(m => ({ role: m.role, content: m.content }));
-
+    const formatted = [...chat, userMsg].map(m => ({ role: m.role, content: m.content }));
     try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: msgs }),
-      });
+      const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: formatted }) });
       const data = await res.json();
-      setChat(prev => [
-        ...prev,
-        { from: 'bot', role: 'assistant', content: data.reply.content },
-      ]);
-    } catch (err) {
-      console.error(err);
+      const sensitive = ['이름','나이','사는 동네','주소','집','전화번호','지역','몇 살','몇학년'];
+      const hasSensitive = sensitive.some(k => input.includes(k));
+
+      if (hasSensitive || nextCount === warningThreshold) {
+        setShowWarningModal(true);
+      } else {
+        setChat(prev => [...prev, { from: 'bot', role: 'assistant', content: data.reply.content }]);
+      }
+    } catch (e) {
+      console.error(e);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleQuizAnswer = answer => {
-    if (answer === 'O') {
-      window.alert('정답! 온라인그루밍은 나쁩니다!');
+  const handleAnswer = answer => {
+    const correct = quizQuestions[quizIndex].answer;
+    window.alert(answer === correct ? '정답!' : '틀렸습니다!');
+    if (quizIndex + 1 < quizQuestions.length) {
+      setQuizIndex(quizIndex + 1);
     } else {
-      window.alert('틀렸습니다! 온라인그루밍은 나쁩니다!');
+      setShowQuizModal(false);
+      setQuizIndex(0);
     }
-    window.open('https://cybershield2023.wixsite.com/my-site', '_blank');
-    setShowQuizModal(false);
   };
 
   return (
-    <div
-      style={{
-        padding: '20px',
-        fontFamily: 'Arial, sans-serif',
-        backgroundColor: '#F24957',
-        minHeight: '100vh',
-        position: 'relative',
-      }}
-    >
-      <header style={{ marginBottom: '10px' }}>
-        <img src="/logo.png" alt="Cyber Shield" style={{ height: '50px' }} />
-      </header>
-
+    <div style={{ backgroundColor: '#F24444', minHeight: '100vh', padding: 0, margin: 0, fontFamily: 'Arial, sans-serif' }}>
       <div
-        ref={containerRef}
         style={{
-          height: '350px',
-          overflowY: 'auto',
-          borderRadius: '8px',
-          backgroundColor: '#F8EBE7',
-          padding: '15px',
-          boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+          maxWidth: 600,
+          margin: '0 auto',
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100vh',
+          boxSizing: 'border-box',
+          padding: '16px'
         }}
       >
-        {chat.map((m, i) => (
-          <div
-            key={i}
-            style={{
-              textAlign: m.from === 'user' ? 'right' : 'left',
-              margin: '8px 0',
-            }}
-          >
-            <span
-              style={{
-                display: 'inline-block',
-                maxWidth: '70%',
-                padding: '10px',
-                borderRadius: '12px',
-                backgroundColor: m.from === 'user' ? '#FFD6D6' : '#FF7A7C',
-                color: '#333',
-                fontSize: '14px',
-                fontWeight: 'bold',
-              }}
-            >
-              {m.content}
-            </span>
-          </div>
-        ))}
-      </div>
+        {/* Header */}
+        <header style={{ display: 'flex', alignItems: 'center', padding: '8px 0' }}>
+          <img src="/logo.png" alt="Cyber Shield" style={{ height: 40 }} />
+        </header>
 
-      <div style={{ display: 'flex', marginTop: '10px' }}>
-        <input
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          placeholder="메시지를 입력하세요"
+        {/* Chat Area */}
+        <div
+          ref={containerRef}
           style={{
             flex: 1,
-            padding: '12px',
-            borderRadius: '8px',
-            border: '2px solid #F8EBE7',
-            fontSize: '14px',
-            fontWeight: 'bold',
-          }}
-          onKeyDown={e => e.key === 'Enter' && sendMessage()}
-          disabled={showWarningModal || showQuizModal}
-        />
-        <button
-          onClick={sendMessage}
-          disabled={loading || showWarningModal || showQuizModal}
-          style={{
-            marginLeft: '10px',
-            padding: '12px 18px',
-            borderRadius: '8px',
             backgroundColor: '#F8EBE7',
-            color: '#F24957',
-            fontWeight: 'bold',
-            fontSize: '14px',
-            border: 'none',
-            cursor: 'pointer',
+            borderRadius: 24,
+            padding: 16,
+            overflowY: 'auto',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+            marginBottom: 8
           }}
         >
-          {loading ? '...' : '전송'}
-        </button>
-      </div>
+          {chat.map((m, i) => (
+            <div key={i} style={{ marginBottom: 12, display: 'flex', justifyContent: m.from === 'user' ? 'flex-end' : 'flex-start' }}>
+              <div
+                style={{
+                  maxWidth: '75%',
+                  backgroundColor: m.from === 'user' ? '#FFD6D6' : '#FF7A7C',
+                  color: '#333',
+                  padding: '12px 16px',
+                  borderRadius: 20,
+                  fontSize: 16,
+                  fontWeight: 700,
+                  lineHeight: 1.6,
+                }}
+              >
+                {m.content}
+              </div>
+            </div>
+          ))}
+        </div>
 
-      {showWarningModal && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            backgroundColor: 'rgba(0,0,0,0.7)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-          }}
-        >
-          <div
+        {/* Input Bar */}
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+          <input
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onCompositionStart={() => setIsComposing(true)}
+            onCompositionEnd={e => { setIsComposing(false); setInput(e.target.value); }}
+            onKeyDown={e => { if (e.key === 'Enter' && !isComposing) sendMessage(); }}
+            placeholder="메시지를 입력하세요"
             style={{
-              backgroundColor: '#B02331',
-              padding: '60px',
-              borderRadius: '12px',
-              textAlign: 'center',
-              color: '#FFF',
-              width: '90%',
-              maxWidth: '700px',
-              boxShadow: '0 8px 16px rgba(0,0,0,0.3)',
+              flex: 1,
+              height: 48,
+              padding: '0 56px 0 16px',
+              borderRadius: 24,
+              border: 'none',
+              backgroundColor: '#FFFFFF',
+              fontSize: 16,
+              fontWeight: 500,
+              boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+              outline: 'none'
+            }}
+          />
+          <button
+            onClick={sendMessage}
+            style={{
+              position: 'absolute',
+              right: 16,
+              width: 32,
+              height: 32,
+              borderRadius: '50%',
+              backgroundColor: 'transparent',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: 'none',
+              cursor: 'pointer'
             }}
           >
-            <h1 style={{ margin: 0, fontSize: '36px', fontWeight: 'bold' }}>
-              ⚠️ 위험 경고!
-            </h1>
-            <p style={{ fontSize: '20px', margin: '20px 0 0', fontWeight: 'bold' }}>
-              당신은 온라인그루밍 범죄 함정에 빠졌습니다.
+            {loading ? '...' : <FiSend color="#000" size={20} />}
+          </button>
+        </div>
+      </div>
+
+      {/* Warning Modal */}
+      {showWarningModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ backgroundColor: '#B02331', padding: 60, borderRadius: 24, maxWidth: 500, width: '90%', color: '#FFF', textAlign: 'center', boxShadow: '0 8px 16px rgba(0,0,0,0.2)', lineHeight: 1.6 }}>
+            <div style={{ fontSize: 64, marginBottom: 16 }}>⚠️</div>
+            <h1 style={{ margin: 0, fontSize: 36, fontWeight: 'bold', marginBottom: 16 }}>위험!</h1>
+            <p style={{ fontSize: 18, marginBottom: 32, fontWeight: 500 }}>
+              온라인 그루밍은 종종 친근하게 접근하여 상대방을 현혹시키며, 정서적 유대감 형성 후 개인정보와 사진 등을 요구합니다.
             </p>
-            <p style={{ fontSize: '20px', margin: '10px 0 0', fontWeight: 'bold' }}>
-              즉시 02-6348-1318로 신고하세요!
-            </p>
-            <div
-              onClick={() => {
-                setShowWarningModal(false);
-                setShowQuizModal(true);
-              }}
-              style={{
-                marginTop: '30px',
-                padding: '12px 24px',
-                backgroundColor: '#FFF',
-                borderRadius: '8px',
-                boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
-                fontSize: '22px',
-                color: '#B02331',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-              }}
-              >
-              📝 퀴즈 풀기
-            </div>
+            <button onClick={() => { setShowWarningModal(false); setShowQuizModal(true); }}
+              style={{ padding: '12px 24px', fontSize: 18, fontWeight: 'bold', borderRadius: 12, border: '2px solid transparent', backgroundColor: '#FFFFFF', color: '#B02331', cursor: 'pointer', boxShadow: '0 4px 8px rgba(0,0,0,0.2)', transition: 'border-color 0.2s ease' }}
+              onMouseEnter={e => e.currentTarget.style.borderColor = '#FF7A7C'}
+              onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}
+            >
+              계속하기
+            </button>
           </div>
         </div>
       )}
 
+      {/* Quiz Modal */}
       {showQuizModal && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            backgroundColor: 'rgba(0,0,0,0.7)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: '#FFF',
-              padding: '40px',
-              borderRadius: '12px',
-              textAlign: 'center',
-              width: '90%',
-              maxWidth: '600px',
-              boxShadow: '0 8px 16px rgba(0,0,0,0.2)',
-            }}
-          >
-            <h1 style={{ margin: 0, fontSize: '32px', fontWeight: 'bold' }}>퀴즈</h1>
-            <p style={{ fontSize: '24px', margin: '20px 0', fontWeight: 'bold' }}>
-              온라인그루밍은 나쁘다?
-            </p>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
-              <button
-                onClick={() => handleQuizAnswer('O')}
-                style={{
-                  padding: '12px 24px',
-                  fontSize: '20px',
-                  fontWeight: 'bold',
-                  borderRadius: '8px',
-                  border: 'none',
-                  backgroundColor: '#F24957',
-                  color: '#FFF',
-                  cursor: 'pointer',
-                }}
-              >
-                O
-              </button>
-              <button
-                onClick={() => handleQuizAnswer('X')}
-                style={{
-                  padding: '12px 24px',
-                  fontSize: '20px',
-                  fontWeight: 'bold',
-                  borderRadius: '8px',
-                  border: 'none',
-                  backgroundColor: '#B02331',
-                  color: '#FFF',
-                  cursor: 'pointer',
-                }}
-              >
-                X
-              </button>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ backgroundColor: '#FFF', padding: 30, borderRadius: 20, textAlign: 'center', width: '90%', maxWidth: 400, boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 'bold', marginBottom: 16 }}>퀴즈</h1>
+            <p style={{ fontSize: 18, marginBottom: 24, fontWeight: 500, lineHeight: 1.4 }}>{quizQuestions[quizIndex].text}</p>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 20 }}>
+              <button onClick={() => handleAnswer('O')}
+                style={{ padding: '10px 20px', fontSize: 16, fontWeight: 'bold', borderRadius: 10, border: 'none', backgroundColor: '#F24957', color: '#FFF', cursor: 'pointer', transition: 'transform 0.2s ease' }}
+                onMouseDown={e => e.currentTarget.style.transform = 'scale(0.9)'}
+                onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+              >O</button>
+              <button onClick={() => handleAnswer('X')} 
+                style={{ padding: '10px 20px', fontSize: 16, fontWeight: 'bold', borderRadius: 10, border: 'none', backgroundColor: '#B02331', color: '#FFF', cursor: 'pointer', transition: 'transform 0.2s ease' }}
+                onMouseDown={e => e.currentTarget.style.transform = 'scale(0.9)'}
+                onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+              >X</button>
             </div>
           </div>
         </div>
       )}
     </div>
-// return의 최상단 div
-);
+  );
 }
