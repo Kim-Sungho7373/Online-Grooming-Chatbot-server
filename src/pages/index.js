@@ -2,6 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { FiSend } from 'react-icons/fi';
 
 export default function Home() {
+  const baseUrl =
+    process.env.NODE_ENV === 'development'
+      ? process.env.NEXT_PUBLIC_API_BASE_URL    // 로컬 테스트: http://localhost:3000
+      : process.env.NEXT_PUBLIC_REMOTE_API;     // 배포: https://your-backend.onrender.com
   const [input, setInput] = useState('');
   const [chat, setChat] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -42,11 +46,11 @@ export default function Home() {
 
     const messages = [...chat, userMsg].map(m => ({ role: m.role, content: m.content }));
     try {
-      const response = await fetch("/api/chat", {
+      const response = await fetch(`${baseUrl}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages }),
-    });
+      });
       const data = await response.json();
       
       const sensitive = ['name','age','state','adress','phone number', 'grade'];
