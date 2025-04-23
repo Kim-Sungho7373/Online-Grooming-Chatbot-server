@@ -14,15 +14,15 @@ export default function Home() {
   const containerRef = useRef(null);
 
   const quizQuestions = [
-    { text: '그루밍 범죄자들은 피해자에게 대화를 ‘비밀’로 해달라고 요구한다.', answer: 'O' },
-    { text: '온라인에서 선물이나 돈을 받는 것은 그루밍의 징후이다.', answer: 'O' },
-    { text: '누군가 캐스팅 매니저라고 사진을 요청하면 보내도 좋다.', answer: 'X' },
-    { text: '온라인 그루밍은 SNS에서만 일어난다.', answer: 'X' },
-    { text: 'SNS에서 개인정보 보호 설정을 사용하면 그루밍범죄자로부터 보호할 수 있다.', answer: 'O' }
+    { text: 'Grooming offenders often ask victims to keep the conversation a “secret".', answer: 'O' },
+    { text: 'Receiving gifts or money online can be a sign of grooming.', answer: 'O' },
+    { text: 'If someone claims to be a casting manager and asks for your photo, it’s okay to send it.', answer: 'X' },
+    { text: 'Online grooming only happens on social media platforms.', answer: 'X' },
+    { text: 'Using privacy settings on social media can help protect you from grooming offenders.', answer: 'O' }
   ];
 
   useEffect(() => {
-    setChat([{ from: 'bot', role: 'assistant', content: '안녕!' }]);
+    setChat([{ from: 'bot', role: 'assistant', content: 'Hi!' }]);
   }, []);
 
   useEffect(() => {
@@ -42,14 +42,14 @@ export default function Home() {
 
     const messages = [...chat, userMsg].map(m => ({ role: m.role, content: m.content }));
     try {
-      const response = await fetch("https://online-grooming-chatbot-server.onrender.com/api/chat", {
+      const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages }), // ← 이제 messages가 제대로 선언되어 있으므로 사용됨
-      });
+        body: JSON.stringify({ messages }),
+    });
       const data = await response.json();
       
-      const sensitive = ['이름','나이','사는 동네','주소','집','전화번호','지역','몇 살','몇학년'];
+      const sensitive = ['name','age','state','adress','phone number', 'grade'];
       const hasSensitive = sensitive.some(k => input.includes(k));
 
       if (hasSensitive || nextCount === warningThreshold) {
@@ -66,7 +66,7 @@ export default function Home() {
 
   const handleAnswer = answer => {
     const correct = quizQuestions[quizIndex].answer;
-    window.alert(answer === correct ? '정답!' : '틀렸습니다!');
+    window.alert(answer === correct ? 'Correct!' : 'Incorrect!');
     if (quizIndex + 1 < quizQuestions.length) {
       setQuizIndex(quizIndex + 1);
     } else {
@@ -124,7 +124,7 @@ export default function Home() {
             onCompositionStart={() => setIsComposing(true)}
             onCompositionEnd={e => { setIsComposing(false); setInput(e.target.value); }}
             onKeyDown={e => { if (e.key === 'Enter' && !isComposing) sendMessage(); }}
-            placeholder="메시지를 입력하세요"
+            placeholder="Send a message"
             style={{
               flex: 1,
               height: 48,
@@ -169,9 +169,9 @@ export default function Home() {
               style={{ backgroundColor: '#FFF', padding: 32, borderRadius: 20, maxWidth: 500, width: '90%', boxShadow: '0 8px 24px rgba(0,0,0,0.2)', textAlign: 'center' }}
             >
               <div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div>
-              <h2 style={{ margin: 0, fontSize: 28, fontWeight: 'bold', color: '#B02331', marginBottom: 16 }}>위험!</h2>
+              <h2 style={{ margin: 0, fontSize: 28, fontWeight: 'bold', color: '#B02331', marginBottom: 16 }}>Warning!</h2>
               <p style={{ fontSize: 16, color: '#333', marginBottom: 32, lineHeight: 1.5 }}>
-                온라인 그루밍은 친근하게 접근하여 상대방을 현혹시키며, <strong>정서적 유대</strong> 형성 후 <strong>개인정보</strong>와 <strong>사진</strong> 등을 요구합니다.
+              Online grooming approaches individuals in a friendly manner to manipulate them, and after establishing an <strong>emotional bond</strong>, it requests <strong>personal information</strong> and <strong>photos</strong>.
               </p>
               <button
                 onClick={() => { setShowWarningModal(false); setShowQuizModal(true); }}
@@ -190,7 +190,7 @@ export default function Home() {
                 onMouseEnter={e => e.currentTarget.style.backgroundColor = '#F5F5F5'}
                 onMouseLeave={e => e.currentTarget.style.backgroundColor = '#FFF'}
               >
-                계속하기
+                Continue
               </button>
             </div>
           </div>
@@ -203,7 +203,7 @@ export default function Home() {
           style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}
         >
           <div style={{ backgroundColor: '#F24444', borderRadius: 20, maxWidth: 400, width: '90%', padding: 32, boxShadow: '0 8px 24px rgba(0,0,0,0.15)', textAlign: 'center' }}>
-            <h3 style={{ margin: 0, fontSize: 24, fontWeight: 'bold', color: '#FFF', marginBottom: 16 }}>퀴즈</h3>
+            <h3 style={{ margin: 0, fontSize: 24, fontWeight: 'bold', color: '#FFF', marginBottom: 16 }}>Quiz</h3>
             <p style={{ fontSize: 18, color: '#FFF', marginBottom: 24, lineHeight: 1.4 }}>{quizQuestions[quizIndex].text}</p>
             <div style={{ display: 'flex', justifyContent: 'center', gap: 16 }}>
               <button
