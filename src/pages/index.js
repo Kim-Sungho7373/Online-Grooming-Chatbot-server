@@ -40,14 +40,15 @@ export default function Home() {
     const nextCount = count + 1;
     setCount(nextCount);
 
-    const formatted = [...chat, userMsg].map(m => ({ role: m.role, content: m.content }));
+    const messages = [...chat, userMsg].map(m => ({ role: m.role, content: m.content }));
     try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: formatted })
+      const response = await fetch("https://online-grooming-chatbot-server.onrender.com/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages }), // ← 이제 messages가 제대로 선언되어 있으므로 사용됨
       });
-      const data = await res.json();
+      const data = await response.json();
+      
       const sensitive = ['이름','나이','사는 동네','주소','집','전화번호','지역','몇 살','몇학년'];
       const hasSensitive = sensitive.some(k => input.includes(k));
 
