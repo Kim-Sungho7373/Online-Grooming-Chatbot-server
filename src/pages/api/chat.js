@@ -6,20 +6,24 @@ const openai = new OpenAI({
 });
 
 export default async function handler(req, res) {
-
+  // 모든 출처에서 오는 요청 허용
   res.setHeader('Access-Control-Allow-Origin', '*');
+  // 허용할 메소드와 헤더 지정
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
-  if (req.method === 'OPTIONS') return res.status(200).end();
-
+  // 프리플라이트 요청에 대한 응답
   if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+    return res.status(204).end();
   }
 
+  // → 여기부터 실제 POST 처리 로직 시작
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return res.status(405).json({ error: 'Method Not Allowed' });
   }
+
+  // ... your OpenAI logic, res.json(...) 등
+}
 
   const { messages } = req.body;
   try {
