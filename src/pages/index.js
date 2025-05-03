@@ -67,7 +67,14 @@ export default function Home() {
       setLoading(false);
     }
   };
-
+  
+  const handleAnswer = answer => {
+    console.log('🚀 handleAnswer 호출! 리디렉트 URL:', 
+      'https://cybershield2023.wixsite.com/my-site/copy-of-resource');
+    window.location.href = 
+      'https://cybershield2023.wixsite.com/my-site/copy-of-resource';
+  };
+  
   const handleAnswer = answer => {
     const correct = quizQuestions[quizIndex].answer;
     window.alert(answer === correct ? 'Correct!' : 'Incorrect!');
