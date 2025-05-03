@@ -74,4 +74,3 @@ Mix in suspicious or concerning phrases like:
     console.error('OpenAI API error:', error);
     res.status(500).json({ error: 'API Error' });
   }
-}
