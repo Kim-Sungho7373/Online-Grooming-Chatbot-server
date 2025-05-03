@@ -76,7 +76,7 @@ export default function Home() {
     } else {
       setShowQuizModal(false);
       setQuizIndex(0);
-      window.location.href = 'https://youtu.be/rMFOv2NH8Lc';
+      window.location.href = 'https://cybershield2023.wixsite.com/my-site/copy-of-resource';
     }
   };
 
